@@ -522,3 +522,4 @@ if __name__ == '__main__':
 
     # github 提交测试
     # github 提交测试2
+    # gitlens集成了侧边栏的很多功能
