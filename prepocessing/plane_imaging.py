@@ -61,9 +61,10 @@ class PlaneHRRPData:
 # TODO
 class MeasuredPlaneHRRPData(PlaneHRRPData):
     def __init__(self, 
-                 data_root, 
+                 hrrp_data_root, 
                  plane_list, 
                  ele_list, 
+                 mearsured_dat_root='F:\\DataSET\\1013'
                  ):
         """
             Measured system an experiments setting can be found in our published paper.
@@ -71,15 +72,13 @@ class MeasuredPlaneHRRPData(PlaneHRRPData):
             Journal: IEEE Transactions on Microwave Theory and Techniques
             DOI: https://doi.org/10.1109/TMTT.2023.3299615
         """
-        # run base class initializing function
-        super(PlaneHRRPData, self).__init__(data_path=data_root, 
-                                            plane_list=plane_list, 
-                                            ele_list=ele_list,
-                                            )
         # HRRP data config
-        
+        self.hrrp_data_root = hrrp_data_root
+        self.plane_list     = plane_list
+        self.ele_list       = ele_list
+        self.mearsured_dat_root = mearsured_dat_root
 
-        self.full_sampling_hrrp_shape = [3600, 256, 11]
+        self.full_sampling_hrrp_shape = [7200, 256]
         # variable for store all plane data
         self.plane_data = {}        
         
@@ -87,6 +86,12 @@ class MeasuredPlaneHRRPData(PlaneHRRPData):
         self._read_all_plane_hrrp_data()
         pass
     
+    def _read_data_from_TrainingSet(self, plane_num, azi):
+        # reload funcitons
+        mat_path = os.path.join(self.hrrp_data_root, '{}'.format(plane_num), '0/TrainingSet', {}.mat.format(azi))
+        hrrp = scio.loadmat(mat_path)['hrrp']
+        return hrrp
+
     """ 不要了，因为python中处理dat文件不好处理，还是选择使用matlab输出TrainingSet，然后直接使用类读取就好了 """
     # from .dat to .mat(HRRP output)——trainset. This function just process single class or single experiment plane measured data.
     # Run with for loop.
@@ -99,7 +104,7 @@ class MeasuredPlaneHRRPData(PlaneHRRPData):
         sweep_phi   = 360        # degree
         step_phi    = .05
         Ra          = 1.71       # imaging radious
-        L           = 226
+        L           = 256
 
         phi_len     = 15
 
