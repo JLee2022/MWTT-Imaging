@@ -58,30 +58,65 @@ class PlaneHRRPData:
             self._read_single_plane_hrrp_data(plane_num=i, azi_range=3600, azi_step=1)
 
 # 实验的飞机数据 
-#TODO
-class MeasuredPlaneHRRPData:
+# TODO
+class MeasuredPlaneHRRPData(PlaneHRRPData):
     def __init__(self, 
                  data_root, 
                  plane_list, 
                  ele_list, 
                  ):
-        self.data_root  = data_root
-        self.plane_list = plane_list
-        self.ele_list   = ele_list
+        """
+            Measured system an experiments setting can be found in our published paper.
+            Title: Fine-Grained Image Generation Network With Radar Range Profiles Using Cross-Modal Visual Supervision
+            Journal: IEEE Transactions on Microwave Theory and Techniques
+            DOI: https://doi.org/10.1109/TMTT.2023.3299615
+        """
+        # run base class initializing function
+        super(PlaneHRRPData, self).__init__(data_path=data_root, 
+                                            plane_list=plane_list, 
+                                            ele_list=ele_list,
+                                            )
+        # HRRP data config
+        
+
         self.full_sampling_hrrp_shape = [3600, 256, 11]
         # variable for store all plane data
         self.plane_data = {}        
         
         # read data
         self._read_all_plane_hrrp_data()
-        # double azi range to 0-359
-        self._double_azi()
         pass
     
-    # 保存数据
-    def _save_hrrp_data(self, save_path):
-        np.save(save_path, self.plane_data)
+    """ 不要了，因为python中处理dat文件不好处理，还是选择使用matlab输出TrainingSet，然后直接使用类读取就好了 """
+    # from .dat to .mat(HRRP output)——trainset. This function just process single class or single experiment plane measured data.
+    # Run with for loop.
+    def _extract_single_plane_hrrp_from_measured_freq_data(self):
+        # file name prefix
+        
+        # system parameters
+        sweep_freq  = 13e9       # sweep bandwidth
+        N_freq      = 251        # freq number
+        sweep_phi   = 360        # degree
+        step_phi    = .05
+        Ra          = 1.71       # imaging radious
+        L           = 226
 
+        phi_len     = 15
+
+        N_phi       = sweep_phi / step_phi + 1
+        step_freq   = sweep_freq / (N_freq - 1)
+        
+        fc          = 33e9      # center frequency
+        c           = 3e8       # speed light
+        lamda       = c / fc
+        k           = 2 * np.pi / lamda
+
+        BW          = N_freq * step_freq    # actual bandwidth
+        res         = c / (2 * BW)
+        range_unambigous = c / (2 * step_freq)      # unambigous range
+        hrrp_points = 1200
+        true_res    = range_unambigous / (hrrp_points - 1)
+        pass
 
 
 # 成像类: 包含载入保存好的数据以及各类成像方法
@@ -374,7 +409,7 @@ class ImagingPlane():
         return np.fft.fftshift(rec_img, axes=0).T
         
 
-# 稀疏成像类：获取/生成稀疏数据->使用不同方法成像
+# 稀疏成像类：获取/生成稀疏数据->使用不同方法成像 
 class ImagingPlane_Sparse(ImagingPlane):
     def __init__(self, 
                  data_path='data/all_plane_data.npy',
@@ -473,7 +508,7 @@ if __name__ == '__main__':
     # ele_list = [0]
     # save_path = "data/all_plane_data.npy"
     # plane_hrrp_data = PlaneHRRPData(data_root=data_root, plane_list=plane_list, ele_list=ele_list)
-    # # plane_hrrp_data._double_azi()
+    # plane_hrrp_data._double_azi()
     # plane_hrrp_data._save_hrrp_data(save_path=save_path)
 
     # plot_hrrp(plane_hrrp_data.plane_data['0'][:, :, 0], is_db=True, is_map=True)   

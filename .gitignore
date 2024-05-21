@@ -1,0 +1,6 @@
+/实验记录
+/data/all_plane_data.npy
+/data/*npy
+/logs
+/outputs
+*.pyc
