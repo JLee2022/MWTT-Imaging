@@ -3,8 +3,8 @@
 import numpy as np
 import os
 import scipy.io as scio
-from prepocessing_utils import *
-from CS_Algorithms import *
+from prepocessing.prepocessing_utils import *
+from prepocessing.CS_Algorithms import *
 
 # 数据预处理类 —— 原始数据从training set获得全采样数据，然后再进行相关成像和提取距离相处理
 # 最后数据全部写入了'data/all_plane_data.npy中，后续成像实验不再需要该类
@@ -58,7 +58,7 @@ class PlaneHRRPData:
             self._read_single_plane_hrrp_data(plane_num=i, azi_range=3600, azi_step=1)
 
 # 实验的飞机数据 
-#todo
+#TODO
 class MeasuredPlaneHRRPData:
     def __init__(self, 
                  data_root, 
@@ -254,8 +254,8 @@ class ImagingPlane():
         d_phi = 0.05
         dx = 0.1
         dy = 0.1
-        COOR_x = np.linspace(-12, 12, 128)      # 成像坐标
-        COOR_y = np.linspace(-12, 12, 128)
+        COOR_x = np.linspace(-12, 12, 256)      # 成像坐标
+        COOR_y = np.linspace(-12, 12, 256)
 
         X, Y = np.meshgrid(COOR_x, COOR_y)
         lx = len(COOR_x)
@@ -281,12 +281,14 @@ class ImagingPlane():
                         index = np.argmin(np.abs(R_ - r_))  # R_代表一个一维距离像的下标所对应的距离，这句话是找到当前像素点，在当前方位距离像下对应的点下标值
                         cal_ = np.exp(1j * 2 * k * ( range_unambigous / 2 + r_ ))       # 矫正系数
                         tmp += data[index, i_array] * cal_
+                        # 如果不矫正呢
+                        tmp += data[index, i_array]
                 # 一轮结束后，将当前像素点像素值放入成像区域中
                 I[i_dx, i_dy] = tmp
 
         ## 绘图
         if is_vis:
-            plot_img(I)
+            plot_img(I, is_db=False)
         return I
         
     def _OMP_imaging(self, data, is_vis=True):
@@ -396,13 +398,13 @@ class ImagingPlane_Sparse(ImagingPlane):
                          ):
         # 指定飞机类别，角度，稀疏方法，获得稀疏数据（k-space）
         ## 获取指定类别的数据
-        data = self._get_data_from_config(plane_num=plane_num, ele=ele, azi_start=azi_start, azi_end=azi_end, azi_step=azi_step)
-        (M, N) = data.shape
+        full_data = self._get_data_from_config(plane_num=plane_num, ele=ele, azi_start=azi_start, azi_end=azi_end, azi_step=azi_step)
+        (M, N) = full_data.shape
         if return_type == "kspace_type":
             ## 将数据转化到k-space
-            ret_data = self._hrrp_to_k_space(data=data)
+            ret_data = self._hrrp_to_k_space(data=full_data)
         elif return_type == "hrrp_type":
-            ret_data = data
+            ret_data = full_data
             pass
         ## 稀疏
         if sparse_method == "random choose":
@@ -419,7 +421,7 @@ class ImagingPlane_Sparse(ImagingPlane):
             raise NotImplementedError
         ## 数据乘以mask
         ret_data = ret_data*mask
-        return ret_data, mask
+        return full_data, ret_data, mask
     
     def _sparse_imaging_specified_plane(self, 
                                         plane_num=0, 
